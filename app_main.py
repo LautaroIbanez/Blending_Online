@@ -15,7 +15,7 @@ app.secret_key = os.urandom(24)
 # Inicializar el analizador de OpenAI
 try:
     analyzer = OpenAIAnalyzer(
-        api_key="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",  # Reemplaza esto con tu API key de OpenAI
+        api_key="API_KEY",  # Reemplaza esto con tu API key de OpenAI
         model="gpt-3.5-turbo"
     )
 except Exception as e:
