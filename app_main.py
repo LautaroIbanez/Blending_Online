@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, jsonify, send_from_directory
+from flask import Flask, render_template, request, jsonify, send_from_directory, send_file
 from openai_analyzer import OpenAIAnalyzer
 import os
 import json
@@ -15,7 +15,7 @@ app.secret_key = os.urandom(24)
 # Inicializar el analizador de OpenAI
 try:
     analyzer = OpenAIAnalyzer(
-        api_key="API_KEY",  # Reemplaza esto con tu API key de OpenAI
+        api_key = "API_KEY", 
         model="gpt-3.5-turbo"
     )
 except Exception as e:
@@ -150,13 +150,20 @@ def chat(conv_id):
                 "role": "system",
                 "content": (
                     "Eres un experto en soporte técnico de plantas industriales. "
-                    "Siempre responde con troubleshooting paso a paso, usando listas numeradas o viñetas. "
-                    "En cada paso, plantea una pregunta de decisión (¿Funcionó? Sí/No) y, según la respuesta, indica el siguiente paso lógico. "
-                    "Si la respuesta es 'No', indica el siguiente paso; si es 'Sí', explica cómo continuar o finalizar el troubleshooting. "
-                    "Usa iconos como 🛠️ para acciones, ⚠️ para advertencias, y resalta los puntos clave en negrita. "
-                    "Si hay advertencias o riesgos, resáltalos con ⚠️ y color. "
-                    "El objetivo es guiar al usuario de forma clara y lógica para resolver problemas técnicos de la máquina, incluso si el problema es complejo. "
-                    "Usa formato Markdown para listas, negritas y advertencias."
+                    "A partir del problema que describe el usuario, genera un troubleshooting como una lista de pasos principales, usando el formato 'Paso 1:', 'Paso 2:', 'Paso 3:', etc. en vez de numeración tipo '1.', '2.', etc. "
+                    "Nunca uses subíndices, sublistas ni listas anidadas bajo ningún concepto. Cada paso debe ser autocontenido: acción clara (con icono 🛠️ si aplica), lógica de decisión Si/No (pero sin poner la pregunta '¿Funcionó? Sí/No' en el título), e indicación: 'Si: ...', 'No: ...', y explicación de causa/efecto dentro del mismo paso. "
+                    "Cuando la respuesta sea negativa, explica brevemente la causa probable y el efecto, y qué hacer antes de volver a intentar, todo dentro del mismo paso. "
+                    "No repitas el número de paso. No pongas preguntas fuera de la lista. Usa solo una lista principal. No uses subíndices, sublistas ni listas anidadas. "
+                    "Usa iconos como 🛠️ para acciones y ⚠️ para advertencias. "
+                    "Resalta los puntos clave en negrita y usa formato Markdown. "
+                    "No incluyas explicaciones largas, pero sí pasos claros, detallados y con lógica Si/No explícita. "
+                    "No incluyas una pregunta final para el usuario. Todos los pasos deben estar en un solo mensaje. "
+                    "El troubleshooting debe finalizar siempre con un último paso que indique: 'Si el problema persiste, contactar al Servicio Técnico.' como última instancia. "
+                    "Ejemplo de formato esperado:\n"
+                    "Paso 1: 🛠️ Verifica la tensión de la correa.\n   - Si: ve al Paso 2.\n   - No: ajusta la correa y vuelve a probar. La causa probable es que la correa floja reduce la transmisión de potencia y afecta la presión.\n"
+                    "Paso 2: 🛠️ Revisa el nivel de aceite.\n   - Si: ve al Paso 3.\n   - No: rellena el aceite y vuelve a probar. La causa probable es que el bajo nivel de aceite genera cavitación y pérdida de presión.\n"
+                    "Paso 3: 🛠️ Comprueba el filtro.\n   - Si: el problema está resuelto.\n   - No: contactar al Servicio Técnico.\n"
+                    "Recuerda: cada paso debe ser un solo ítem de la lista principal, sin subíndices ni sublistas. Si necesitas profundizar, hazlo dentro del mismo paso, nunca como subíndice."
                 )
             }]
         )
@@ -234,6 +241,10 @@ def process_events_file(df):
         return "\n\n".join(summary)
     except Exception as e:
         return f"Error al procesar archivo de eventos: {str(e)}"
+
+@app.route('/logo.png')
+def logo():
+    return send_file('logo.png', mimetype='image/png')
 
 if __name__ == '__main__':
     app.run(debug=True) 
